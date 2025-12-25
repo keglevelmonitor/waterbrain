@@ -74,7 +74,8 @@ class BrewMath:
         g_lime = (rem_ca * vol_L) / 540.0 if rem_ca > 0.1 else 0.0
         
         # Acid
-        base_mash_ph = 5.65 - (0.018 * srm)
+        # Fixed base pH intercept (5.70) to align with standard RO water assumptions
+        base_mash_ph = 5.70 - (0.018 * srm)
         meq_ca = (total_ca_salts + rem_ca) / 20.0  
         meq_mg = tgt_mg / 12.15
         salt_ph_drop = (meq_ca * 0.04) + (meq_mg * 0.03)
@@ -137,7 +138,7 @@ with col_in:
         if st.button("CALCULATE WATER VOLUMES", type="primary", use_container_width=True):
             abs_rate = 1.04 if is_metric else 0.5  # 0.5 qt/lb default for Imperial
             res = BrewMath.calculate_water(grain_wt, grain_temp, mash_temp, ferm_vol, trub_vol, 
-                                          boil_time, boiloff, abs_rate, "sparge" if method == "Sparge" else "no_sparge", 
+                                          boil_time, boiloff, abs_rate, "Sparge" if method == "Sparge" else "no_sparge", 
                                           thickness, is_metric)
             st.session_state.water_res = res
             st.session_state.chem_res = None
@@ -180,5 +181,8 @@ with col_out:
             st.success("### 🧂 Salt Additions")
             r1, r2 = st.columns(2)
             r1.metric("Gypsum", f"{s['gypsum']:.2f} g"); r1.metric("CaCl2", f"{s['cacl2']:.2f} g"); r1.metric("Epsom", f"{s['epsom']:.2f} g")
-            r2.metric("Salt", f"{s['salt']:.2f} g"); r2.metric("Lime", f"{s['lime']:.2f} g"); r2.metric("Lactic (88%)", f"{s['acid']:.2f} ml")
+            r2.metric("Salt", f"{s['salt']:.2f} g"); r2.metric("Lime", f"{s['lime']:.2f} g")
+            
+            # UPDATED: Displays grams beneath ml using delta parameter with color off
+            r2.metric("Lactic (88%)", f"{s['acid']:.2f} ml", delta=f"{s['acid_g']:.2f} g", delta_color="off")
         else: st.warning("Water calculated. Click 'Calculate Salts' to see additions.")
