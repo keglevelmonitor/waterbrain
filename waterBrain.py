@@ -1,3 +1,6 @@
+# developer's note 
+# to run locally on pi: activate venv, navigate to src/, bash streamlit run waterBrain.py
+
 import streamlit as st
 import json
 
@@ -11,10 +14,13 @@ class BrewMath:
         total_boiloff = boiloff_rate * (boil_time / 60.0)
         pre_boil_vol = post_boil_vol + total_boiloff
         
-        # Absorption
+        # Absorption Calculation
         if is_metric:
+            # Input is L/kg, result is L
             total_abs = grain_wt * abs_rate
         else:
+            # Input is qt/lb, convert to gallons (qt / 4)
+            # Result is gallons
             total_abs = (grain_wt * abs_rate) / 4.0
         
         total_water_needed = pre_boil_vol + total_abs
@@ -51,7 +57,7 @@ class BrewMath:
                             tgt_ca, tgt_mg, tgt_na, tgt_so4, tgt_cl, is_metric):
         if water_vol <= 0: return {k: 0.0 for k in ["gypsum", "cacl2", "epsom", "salt", "lime", "acid", "acid_g"]}
 
-        # Normalize
+        # Normalize to Liters and Kg for chemistry math
         vol_L = water_vol if is_metric else water_vol * 3.78541
         grain_kg = grain_wt if is_metric else grain_wt * 0.453592
 
@@ -73,8 +79,8 @@ class BrewMath:
         rem_ca = max(0, tgt_ca - total_ca_salts)
         g_lime = (rem_ca * vol_L) / 540.0 if rem_ca > 0.1 else 0.0
         
-        # Acid
-        # Fixed base pH intercept (5.70) to align with standard RO water assumptions
+        # Acid Calculation
+        # Base pH intercept 5.70 aligned with RO water
         base_mash_ph = 5.70 - (0.018 * srm)
         meq_ca = (total_ca_salts + rem_ca) / 20.0  
         meq_mg = tgt_mg / 12.15
@@ -116,7 +122,10 @@ with st.sidebar:
     st.header("Global Settings")
     unit_system = st.radio("Select Unit System", ["US Standard (lb/Gal/°F)", "Metric (kg/L/°C)"], index=0)
     is_metric = (unit_system == "Metric (kg/L/°C)")
-    u_wt, u_temp, u_vol, u_thick = ("kg", "°C", "L", "L/kg") if is_metric else ("lb", "°F", "gal", "qt/lb")
+    
+    # Define Units
+    # u_abs set to 'qt/lb' for US or 'L/kg' for Metric
+    u_wt, u_temp, u_vol, u_thick, u_abs = ("kg", "°C", "L", "L/kg", "L/kg") if is_metric else ("lb", "°F", "gal", "qt/lb", "qt/lb")
 
 col_in, col_out = st.columns([1, 1], gap="large")
 
@@ -131,14 +140,20 @@ with col_in:
         mash_temp = c2.number_input(f"Target Mash Temp ({u_temp})", value=152 if not is_metric else 67)
         c3, c4 = st.columns(2)
         boiloff = c3.number_input(f"Boiloff Rate ({u_vol}/hr)", value=1.0 if not is_metric else 3.8)
-        ferm_vol = c3.number_input(f"Volume into Fermenter ({u_vol})", value=5.5 if not is_metric else 21.0)
+        
+        # Swapped: Abs Rate moved to c3
+        absorption_rate = c3.number_input(f"Grain Abs. Rate ({u_abs})", value=1.04 if is_metric else 0.5, step=0.01)
+
         trub_vol = c4.number_input(f"Trub Volume\n({u_vol})", value=0.25 if not is_metric else 1.0)
+        
+        # Swapped: Ferm Volume moved to c4
+        ferm_vol = c4.number_input(f"Volume into Fermenter ({u_vol})", value=5.5 if not is_metric else 21.0)
+
         thickness = c4.number_input(f"Mash Thickness ({u_thick})", value=1.5 if not is_metric else 3.0) if method == "Sparge" else 3.0
         
         if st.button("CALCULATE WATER VOLUMES", type="primary", use_container_width=True):
-            abs_rate = 1.04 if is_metric else 0.5  # 0.5 qt/lb default for Imperial
             res = BrewMath.calculate_water(grain_wt, grain_temp, mash_temp, ferm_vol, trub_vol, 
-                                          boil_time, boiloff, abs_rate, "Sparge" if method == "Sparge" else "no_sparge", 
+                                          boil_time, boiloff, absorption_rate, "Sparge" if method == "Sparge" else "no_sparge", 
                                           thickness, is_metric)
             st.session_state.water_res = res
             st.session_state.chem_res = None
@@ -182,7 +197,5 @@ with col_out:
             r1, r2 = st.columns(2)
             r1.metric("Gypsum", f"{s['gypsum']:.2f} g"); r1.metric("CaCl2", f"{s['cacl2']:.2f} g"); r1.metric("Epsom", f"{s['epsom']:.2f} g")
             r2.metric("Salt", f"{s['salt']:.2f} g"); r2.metric("Lime", f"{s['lime']:.2f} g")
-            
-            # UPDATED: Displays grams beneath ml using delta parameter with color off
             r2.metric("Lactic (88%)", f"{s['acid']:.2f} ml", delta=f"{s['acid_g']:.2f} g", delta_color="off")
         else: st.warning("Water calculated. Click 'Calculate Salts' to see additions.")
