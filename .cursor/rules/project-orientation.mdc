@@ -1,0 +1,46 @@
+---
+description: WaterBrain project orientation - read primer and todos before any work
+alwaysApply: true
+---
+
+# WaterBrain — Read These First
+
+At the start of every new chat about this project, read both files
+below. They are the ground truth for project conventions and pending
+work. Skip this and you will re-litigate decisions already made.
+
+1. **`.cursor/context-primer.md`** — non-obvious conventions
+   (deploy/ship workflow, BF calibration story of v0.3.0 → v0.3.2,
+   how the mash pH model actually works, localStorage schema, UI
+   conventions, reference recipes for regression testing, where to
+   tune what).
+
+2. **`.cursor/todos.md`** — open work items and current status.
+   Mirror these into your in-chat todo list. When work completes,
+   update this file so the next agent has ground truth.
+
+## Project neighbors (do not confuse)
+
+- **This repo (`WaterBrain/`)** — pure-JS standalone brew-day water
+  calculator. Deploys as a static site on GitHub Pages, live at
+  <https://keglevelmonitor.github.io/waterbrain/>. Active development.
+- **`../FermTrend/`** — sibling standalone web app for BF SG-trend
+  and final-gravity analysis. Same visual language, same Pages-based
+  deploy pattern. WaterBrain's `ship.ps1`, `local.ps1`, and
+  `.github/workflows/pages.yml` were adapted from here — when a
+  deploy or scaffolding question comes up, consult FermTrend.
+- **`keglevelmonitor/waterbrain` branch `streamlit-legacy` on GitHub**
+  — the ORIGINAL Streamlit-based WaterBrain, preserved for
+  provenance. Do not build off it; the pure-JS rewrite in `main` is
+  the ground truth for behavior. When math differs, this repo wins.
+- **`../FermVaultPico/`** — Cole's Raspberry Pi Pico W fermentation
+  controller. Unrelated to WaterBrain's math, but shares the same
+  visual language / dark-theme-with-amber-accent aesthetic. Follow
+  the same UX conventions if you touch styling.
+
+## Update discipline
+
+If you make a decision that future agents need to know about (new
+convention, gotcha discovered, architectural choice), add it to
+`.cursor/context-primer.md`. If you add or resolve a work item,
+update `.cursor/todos.md`. These files are the handoff protocol.
