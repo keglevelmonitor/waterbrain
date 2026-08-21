@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WaterBrain &mdash; Brew day water calculator</title>
+  <meta name="description" content="Free browser app for brewing water calculations. Strike / sparge volumes, strike temperature, and salt additions to hit any target mineral profile. Same look-and-feel as FermTrend and the FermVault Brain dashboard. Runs entirely in your browser."/>
+  <meta name="theme-color" content="#0a0a0a"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:site_name"   content="WaterBrain"/>
+  <meta property="og:title"       content="WaterBrain &mdash; Brew day water calculator"/>
+  <meta property="og:description" content="Strike / sparge volumes, strike temperature, and salt additions to hit any target mineral profile. Runs entirely in your browser."/>
+  <meta property="og:url"         content="https://keglevelmonitor.github.io/waterbrain/"/>
+
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Favicon: inline SVG (water droplet on dark tile). -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141414'/%3E%3Cpath d='M16 5 C 11 12 8 16 8 20 a 8 8 0 0 0 16 0 c 0 -4 -3 -8 -8 -15 z' fill='%234dbfff' stroke='%23ffa500' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E"/>
+</head>
+<body>
+<div id="app">
+
+  <header class="main-header">
+    <h1>WaterBrain</h1>
+    <button id="unit-pill" class="status-pill unit-us" type="button" title="Click to toggle US / Metric units">US</button>
+    <span id="header-label" class="header-label"></span>
+    <span id="version-label" class="version"></span>
+  </header>
+
+  <nav class="top-nav">
+    <button class="nav-btn active" data-tab="calculator">CALCULATOR</button>
+    <button class="nav-btn"        data-tab="profiles">PROFILES</button>
+    <button class="nav-btn"        data-tab="settings">SETTINGS</button>
+    <button class="nav-btn"        data-tab="about">ABOUT</button>
+  </nav>
+
+  <!-- ============================================================
+       CALCULATOR
+       ============================================================ -->
+  <section id="tab-calculator" class="tab">
+
+    <!-- ---- Water requirements ---- -->
+    <div class="card">
+      <div class="card-header">1. Water Requirements</div>
+
+      <div class="radio-row" role="group" aria-label="Mash method">
+        <button type="button" class="radio-btn active" data-method="no_sparge">No Sparge (BIAB)</button>
+        <button type="button" class="radio-btn"        data-method="sparge">Sparge</button>
+      </div>
+
+      <div class="grain-bill-block">
+        <div class="grain-bill-header">
+          <span class="grain-bill-title">Grain Bill</span>
+          <span class="grain-total-hint">Total: <span id="grain-total">0.00</span> <span class="u-wt">lb</span></span>
+        </div>
+        <table class="grain-bill-table">
+          <thead>
+            <tr>
+              <th class="col-weight">Weight</th>
+              <th class="col-unit">Unit</th>
+              <th class="col-cat">Type</th>
+              <th class="col-color">Color (&deg;L)</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="grain-bill-rows"></tbody>
+        </table>
+        <div class="grain-bill-actions">
+          <button type="button" id="btn-add-grain" class="btn-secondary">+ Add Grain</button>
+          <span class="hint">For <em>Acidulated Malt</em>, the Color column means % lactic acid content (typical: 3.0).</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="in-grain-temp">Grain Temp (<span class="u-temp">&deg;F</span>)</label>
+          <input type="number" id="in-grain-temp" step="1"/>
+        </div>
+        <div class="form-field">
+          <label for="in-mash-temp">Target Mash Temp (<span class="u-temp">&deg;F</span>)</label>
+          <input type="number" id="in-mash-temp" step="1"/>
+        </div>
+
+        <div class="form-field">
+          <label for="in-boil-time">Boil Time (min)</label>
+          <input type="number" id="in-boil-time" step="5" min="0"/>
+        </div>
+        <div class="form-field">
+          <label for="in-boiloff">Boiloff Rate (<span class="u-vol">gal</span>/hr)</label>
+          <input type="number" id="in-boiloff" step="0.1" min="0"/>
+        </div>
+
+        <div class="form-field">
+          <label for="in-trub">Trub Volume (<span class="u-vol">gal</span>)</label>
+          <input type="number" id="in-trub" step="0.05" min="0"/>
+        </div>
+        <div class="form-field">
+          <label for="in-abs">Grain Abs. Rate (<span class="u-abs">qt/lb</span>)</label>
+          <input type="number" id="in-abs" step="0.01" min="0"/>
+        </div>
+
+        <div class="form-field">
+          <label for="in-ferm">Volume into Fermenter (<span class="u-vol">gal</span>)</label>
+          <input type="number" id="in-ferm" step="0.1" min="0"/>
+        </div>
+        <div class="form-field" id="thickness-field">
+          <label for="in-thickness">Mash Thickness (<span class="u-thick">qt/lb</span>)</label>
+          <input type="number" id="in-thickness" step="0.1" min="0.5"/>
+          <span class="hint">Sparge only. Ignored for No-Sparge / BIAB.</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button id="btn-calc-water" class="btn-primary btn-full">Calculate Water Volumes</button>
+      </div>
+    </div>
+
+    <!-- ---- Water requirements results ---- -->
+    <div id="water-results" class="card hidden">
+      <div class="card-header">Water Results</div>
+
+      <div class="dash-strip strip-4">
+        <div class="strip-cell">
+          <div class="strip-key">Strike Water</div>
+          <div class="strip-val strong" id="out-strike-vol">-.--</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Strike Temp</div>
+          <div class="strip-val strong" id="out-strike-temp">-.-</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Sparge Water</div>
+          <div class="strip-val" id="out-sparge-vol">-.--</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Pre-Boil Volume</div>
+          <div class="strip-val" id="out-preboil-vol">-.--</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Total Mash Volume</div>
+          <div class="strip-val" id="out-mash-vol">-.--</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Total Brew Water</div>
+          <div class="strip-val" id="out-total-water">-.--</div>
+        </div>
+      </div>
+
+      <div class="notice-bar warn" style="margin-top: 12px; margin-bottom: 0;">
+        <span class="notice-label">Check</span>
+        <span class="notice-text">Ensure your Mash Tun is large enough to hold the total mash volume.</span>
+      </div>
+    </div>
+
+    <!-- ---- Chemistry inputs ---- -->
+    <div class="card">
+      <div class="card-header">2. Chemistry &amp; Target Profile</div>
+
+      <div class="form-field">
+        <label for="in-profile">Load Target Profile</label>
+        <select id="in-profile"></select>
+        <span class="hint" id="profile-desc"></span>
+      </div>
+
+      <div class="ion-row">
+        <div class="ion-field">
+          <label for="in-ca">Ca<sup>+2</sup></label>
+          <input type="number" id="in-ca" step="1" min="0"/>
+        </div>
+        <div class="ion-field">
+          <label for="in-mg">Mg<sup>+2</sup></label>
+          <input type="number" id="in-mg" step="1" min="0"/>
+        </div>
+        <div class="ion-field">
+          <label for="in-na">Na<sup>+</sup></label>
+          <input type="number" id="in-na" step="1" min="0"/>
+        </div>
+        <div class="ion-field">
+          <label for="in-cl">Cl<sup>-</sup></label>
+          <input type="number" id="in-cl" step="1" min="0"/>
+        </div>
+        <div class="ion-field">
+          <label for="in-so4">SO<sub>4</sub><sup>-2</sup></label>
+          <input type="number" id="in-so4" step="1" min="0"/>
+        </div>
+        <div class="ion-field ion-ph">
+          <label for="in-target-ph">Target Mash pH</label>
+          <input type="number" id="in-target-ph" step="0.05" min="4.5" max="6.5"/>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button id="btn-calc-chem" class="btn-primary btn-full">Calculate Salt Additions</button>
+      </div>
+      <div id="chem-msg" class="msg" style="margin-top: 8px;"></div>
+    </div>
+
+    <!-- ---- Chemistry results ---- -->
+    <div id="chem-results" class="card hidden">
+      <div class="card-header">Salt Additions</div>
+
+      <div class="ph-diag" id="ph-diag">
+        <div class="ph-step">
+          <div class="ph-label">Est. Mash pH</div>
+          <div class="ph-value" id="out-est-ph">-.--</div>
+          <div class="ph-note" id="out-di-note">from grain bill</div>
+        </div>
+        <div class="ph-arrow">&rarr;</div>
+        <div class="ph-step">
+          <div class="ph-label">Target</div>
+          <div class="ph-value ph-target" id="out-target-ph">5.40</div>
+          <div class="ph-note" id="out-acid-split">-</div>
+        </div>
+      </div>
+
+      <div class="dash-strip strip-3">
+        <!-- Row 1: Gypsum | Epsom | Canning Salt -->
+        <div class="strip-cell">
+          <div class="strip-key">Gypsum (CaSO<sub>4</sub>)</div>
+          <div class="strip-val strong" id="out-gypsum">-.--</div>
+          <div class="strip-sub">grams</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Epsom (MgSO<sub>4</sub>)</div>
+          <div class="strip-val" id="out-epsom">-.--</div>
+          <div class="strip-sub">grams</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Canning Salt (NaCl)</div>
+          <div class="strip-val" id="out-salt">-.--</div>
+          <div class="strip-sub">grams</div>
+        </div>
+        <!-- Row 2: Calcium Chloride | Slaked Lime | Lactic Acid -->
+        <div class="strip-cell">
+          <div class="strip-key">Calcium Chloride (CaCl<sub>2</sub>)</div>
+          <div class="strip-val strong" id="out-cacl2">-.--</div>
+          <div class="strip-sub">grams</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Slaked Lime (Ca(OH)<sub>2</sub>)</div>
+          <div class="strip-val" id="out-lime">-.--</div>
+          <div class="strip-sub">grams</div>
+        </div>
+        <div class="strip-cell">
+          <div class="strip-key">Lactic Acid (88%)</div>
+          <div class="strip-val" id="out-acid">-.--</div>
+          <div class="strip-sub" id="out-acid-sub">mL</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       PROFILES
+       ============================================================ -->
+  <section id="tab-profiles" class="tab hidden">
+
+    <div class="settings-block">
+      <div class="settings-header">Built-in target water profiles</div>
+      <p class="settings-desc">
+        26 style-targeted profiles carried over from the original app.
+        Click one to load it into the CALCULATOR tab.  All values are
+        parts-per-million (ppm) of the target ion.
+      </p>
+
+      <div id="profiles-list" class="profiles-list"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SETTINGS
+       ============================================================ -->
+  <section id="tab-settings" class="tab hidden">
+
+    <div class="settings-block">
+      <div class="settings-header">Unit system</div>
+      <p class="settings-desc">
+        WaterBrain runs its inputs in either US Standard (lb / gal /
+        &deg;F) or Metric (kg / L / &deg;C).  You can switch modes any
+        time by clicking the pill in the header.  Salt-addition
+        results are always given in grams and milliliters; only the
+        input side changes.
+      </p>
+      <div class="action-row">
+        <button id="btn-unit-us"     class="btn-secondary">US Standard</button>
+        <button id="btn-unit-metric" class="btn-secondary">Metric</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <div class="settings-header">Reset inputs</div>
+      <p class="settings-desc">
+        Restore every input on the CALCULATOR tab to its default value
+        for the current unit system.  Does not clear results.
+      </p>
+      <div class="action-row">
+        <button id="btn-reset-inputs" class="btn-danger">Reset all inputs to defaults</button>
+        <span id="reset-msg" class="msg"></span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       ABOUT
+       ============================================================ -->
+  <section id="tab-about" class="tab hidden">
+    <div class="settings-block">
+      <div class="settings-header">About WaterBrain</div>
+      <p class="settings-desc">
+        Standalone browser app for brew-day water calculations.  Two
+        stateless calculators bolted together:
+      </p>
+      <ol class="assumption-list">
+        <li><strong>Water Requirements</strong> &mdash; strike / sparge volumes, strike temperature, and total brew water from grain weight, temperatures, boil-off, absorption, and mash thickness.</li>
+        <li><strong>Water Chemistry</strong> &mdash; gypsum, calcium chloride, Epsom, canning salt, slaked lime, and lactic-acid doses required to hit any target Ca / Mg / Na / Cl / SO4 profile starting from RO water.</li>
+      </ol>
+      <p class="settings-desc" style="margin-top: 12px;">
+        This is a pure-JS rewrite of the earlier Streamlit-based
+        WaterBrain.  Same math, same profiles, no Python server, no
+        install &mdash; runs entirely on the device you're viewing it
+        from.  Same visual language as
+        <a href="https://keglevelmonitor.github.io/fermtrend/" target="_blank" rel="noopener">FermTrend</a>
+        and the FermVault Brain dashboard.
+      </p>
+      <p class="settings-desc">
+        Source: <a href="https://github.com/keglevelmonitor/waterbrain" target="_blank" rel="noopener">github.com/keglevelmonitor/waterbrain</a>.
+        MIT-licensed.
+      </p>
+    </div>
+
+    <div class="settings-block">
+      <div class="settings-header">Assumptions</div>
+      <ul class="assumption-list">
+        <li>Starting water is Reverse Osmosis: neutral pH, zero alkalinity, zero background ions.</li>
+        <li>Sparge calculations assume full-volume water treatment (add salts to the total brew water, not just the mash).</li>
+        <li>pH and salt math is approximate.  Compare results with other calculators before betting a brew day on them.</li>
+      </ul>
+    </div>
+
+    <div class="settings-block">
+      <div class="settings-header">Revision history</div>
+      <p class="settings-desc">
+        WaterBrain has no OTA &mdash; shipping a change means pushing
+        to the <code>main</code> branch and letting Pages redeploy.
+        This is the ledger of what shipped when.
+      </p>
+      <div id="rev-history" class="rev-history">
+        <div class="rev-empty">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node -- WaterBrain has no build step, but `npx serve` may pull deps
+node_modules/
+npm-debug.log*
+.npm/
+
+# Local dev artifacts
+_site/
+.cache/

@@ -1,0 +1,765 @@
+/* WaterBrain -- dark theme with amber accent.
+   Palette + component vocabulary lifted from FermTrend / FermVault
+   Brain so the three dashboards feel like one product line. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+a { color: #4dbfff; }
+a:hover { color: #82d4ff; }
+
+#app {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+
+.main-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 54px;
+  background: #141414;
+  border-bottom: 1px solid #222;
+}
+
+.main-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffa500;
+  letter-spacing: 0.5px;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+.status-pill:hover { filter: brightness(1.15); }
+.status-pill.unit-us     { background: #2a1e0a; color: #ffa500; }
+.status-pill.unit-metric { background: #0a1e2a; color: #60a5fa; }
+
+.header-label {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffa500;
+  letter-spacing: 0.6px;
+  text-align: right;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.version {
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 0.4px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  margin-left: 8px;
+}
+.header-label:empty + .version { margin-left: auto; }
+
+/* ---- Nav ---- */
+
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  background: #101010;
+  border-bottom: 1px solid #222;
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 12px 6px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-btn:hover  { color: #e0e0e0; }
+.nav-btn.active {
+  color: #ffa500;
+  border-bottom-color: #ffa500;
+  background: #161616;
+}
+
+/* ---- Tab bodies ---- */
+
+.tab {
+  padding: 16px;
+  flex: 1;
+}
+.tab.hidden { display: none; }
+
+.hidden { display: none !important; }
+
+.empty-state {
+  padding: 40px 16px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.empty-state strong { color: #ffa500; }
+
+/* ---- Cards + rows ---- */
+
+.card {
+  background: #161616;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.card-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #888;
+  text-transform: uppercase;
+  border-bottom: 1px solid #262626;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+/* Metric strip -- reused for both the calculator inputs summary and
+   the results panels.  Same grid pattern as FermTrend's dash-strip. */
+.dash-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .dash-strip.strip-3 { grid-template-columns: repeat(3, 1fr); }
+  .dash-strip.strip-4 { grid-template-columns: repeat(4, 1fr); }
+}
+.strip-cell {
+  background: #0f0f0f;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  padding: 10px 12px;
+  min-height: 62px;
+}
+.strip-key {
+  font-size: 10px;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.strip-val {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 20px;
+  color: #eee;
+  font-variant-numeric: tabular-nums;
+}
+.strip-val.strong { color: #ffa500; }
+.strip-sub {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Notice bar (informational strip, above results) ---- */
+
+.notice-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.notice-bar.warn {
+  background: #35301a;
+  border: 1px solid #ffd84d;
+  color: #fce8a0;
+}
+.notice-bar.info {
+  background: #0f1a24;
+  border: 1px solid #3b82f6;
+  color: #b8d5f5;
+}
+.notice-label {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.notice-bar.warn .notice-label { background: #ffd84d; color: #1f1a0a; }
+.notice-bar.info .notice-label { background: #3b82f6; color: #0a0f18; }
+.notice-text { flex: 1 1 auto; }
+
+/* ---- Section headings used inside the calculator tab ---- */
+
+.section-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffa500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 18px 0 8px 0;
+}
+.section-heading:first-child { margin-top: 0; }
+.section-desc {
+  font-size: 12px;
+  color: #aaa;
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+}
+
+/* ---- Forms (inputs, radios, selects) ---- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 14px;
+}
+@media (max-width: 520px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-field label {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-field input,
+.form-field select {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  color: #eee;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font: 14px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  width: 100%;
+}
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #ffa500;
+  outline: none;
+}
+.form-field .hint {
+  font-size: 11px;
+  color: #777;
+}
+
+/* Ion row: single-line horizontal group for the 5 target-ion inputs
+   plus Target Mash pH on the far right, separated by a subtle rule.
+   Collapses to a 3-column grid on narrow screens so the labels
+   don't overlap. */
+.ion-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.4fr);
+  gap: 8px;
+  align-items: end;
+  margin-top: 10px;
+}
+@media (max-width: 640px) {
+  .ion-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 10px;
+  }
+}
+.ion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ion-field label {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.ion-field label sup,
+.ion-field label sub {
+  font-size: 9px;
+  line-height: 0;
+}
+.ion-field input {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  color: #eee;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font: 14px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  width: 100%;
+  min-width: 0;
+}
+.ion-field input:focus {
+  border-color: #ffa500;
+  outline: none;
+}
+/* pH sits at the right of the ion row -- vertical rule + a touch of
+   left padding to signal it's a different kind of input.  When the
+   grid collapses to 3 columns on narrow screens the divider is
+   dropped so it doesn't slice through a wrapped row awkwardly. */
+.ion-field.ion-ph {
+  border-left: 1px solid #262626;
+  padding-left: 12px;
+  margin-left: 4px;
+}
+@media (max-width: 640px) {
+  .ion-field.ion-ph {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    grid-column: 1 / -1;
+  }
+}
+
+/* Grain bill block: a table with one row per grain, plus an
+   Add-Grain button below.  Sits above the .form-grid in the water-
+   requirements card because everything else hangs off the grain
+   total (absorption, mash volume, strike temp). */
+.grain-bill-block {
+  margin-bottom: 12px;
+}
+.grain-bill-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.grain-bill-header .grain-total-hint {
+  text-transform: none;
+  color: #ffa500;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.grain-bill-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  table-layout: fixed;
+}
+.grain-bill-table th {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  text-align: left;
+  padding: 0 6px 4px;
+}
+.grain-bill-table td {
+  padding: 0 4px;
+  vertical-align: middle;
+}
+.grain-bill-table td:first-child { padding-left: 0; }
+.grain-bill-table td:last-child  { padding-right: 0; }
+
+/* Column widths.  Grain type is the widest so long names like
+   "Acidulated Malt" don't wrap. */
+.grain-bill-table .col-weight { width: 20%; }
+.grain-bill-table .col-unit   { width: 14%; }
+.grain-bill-table .col-cat    { width: 38%; }
+.grain-bill-table .col-color  { width: 20%; }
+.grain-bill-table .col-del    { width: 8%; }
+
+@media (max-width: 520px) {
+  .grain-bill-table { table-layout: auto; }
+  .grain-bill-table .col-weight,
+  .grain-bill-table .col-unit,
+  .grain-bill-table .col-cat,
+  .grain-bill-table .col-color,
+  .grain-bill-table .col-del { width: auto; }
+}
+
+.grain-bill-table input,
+.grain-bill-table select {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  color: #eee;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font: 13px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.grain-bill-table input:focus,
+.grain-bill-table select:focus {
+  border-color: #ffa500;
+  outline: none;
+}
+
+/* Delete-row button: subtle by default, red on hover.  A small
+   circle keeps it from dominating the row visually. */
+.grain-del {
+  background: transparent;
+  border: 1px solid #333;
+  color: #666;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.grain-del:hover {
+  color: #ff5252;
+  border-color: #ff5252;
+  background: rgba(255, 82, 82, 0.08);
+}
+.grain-del:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.grain-del:disabled:hover {
+  color: #666;
+  border-color: #333;
+  background: transparent;
+}
+
+.grain-bill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.grain-bill-actions .hint {
+  color: #666;
+  font-size: 11px;
+  flex: 1;
+  text-align: right;
+}
+#btn-add-grain {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* pH diagnostic strip at the top of the Salt Additions card.  Three
+   equal steps separated by arrows, showing DI mash pH from grain
+   bill -> post-salts pH -> target.  The target cell also carries a
+   sub-line describing where the acid dose split (pH / lime). */
+.ph-diag {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 6px;
+  align-items: center;
+  background: #0f0f0f;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+@media (max-width: 520px) {
+  .ph-diag {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .ph-diag .ph-arrow { display: none; }
+}
+.ph-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.ph-step .ph-label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.ph-step .ph-value {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 20px;
+  color: #eee;
+  font-variant-numeric: tabular-nums;
+}
+.ph-step .ph-value.ph-target {
+  color: #ffa500;
+}
+.ph-step .ph-note {
+  font-size: 11px;
+  color: #777;
+  text-align: center;
+  line-height: 1.3;
+}
+.ph-arrow {
+  color: #444;
+  font-size: 18px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.radio-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.radio-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.radio-btn:hover { color: #e0e0e0; border-color: #555; }
+.radio-btn.active {
+  background: #2a1e0a;
+  border-color: #ffa500;
+  color: #ffa500;
+}
+
+/* ---- Settings blocks ---- */
+
+.settings-block {
+  background: #161616;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.settings-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffa500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid #262626;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.settings-desc {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+/* ---- Buttons ---- */
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.btn-primary {
+  background: #ffa500;
+  color: #1a1a1a;
+}
+.btn-primary:hover { background: #ffb733; }
+.btn-primary:disabled { background: #4a3d1e; color: #999; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  border-color: #444;
+  color: #ddd;
+}
+.btn-secondary:hover { border-color: #ffa500; color: #ffa500; }
+
+.btn-danger {
+  background: transparent;
+  border-color: #7a2020;
+  color: #f87171;
+}
+.btn-danger:hover { background: #351414; }
+
+.btn-full { width: 100%; justify-content: center; }
+
+.msg {
+  font-size: 12px;
+  color: #aaa;
+  min-height: 1em;
+}
+.msg.ok   { color: #4ade80; }
+.msg.err  { color: #f87171; }
+.msg.warn { color: #ffd84d; }
+
+/* ---- Profiles list (Sessions-tab analogue) ---- */
+
+.profiles-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.profile-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  background: #0f0f0f;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.profile-row:hover { border-color: #ffa500; }
+.profile-row.active {
+  border-color: #ffa500;
+  background: #1a1408;
+}
+.profile-title {
+  color: #eee;
+  font-weight: 600;
+}
+.profile-desc {
+  grid-column: 1 / -1;
+  color: #888;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.profile-ions {
+  flex: 0 0 auto;
+  color: #bbb;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.profile-ions span + span { margin-left: 10px; }
+.profile-ions .ion-key { color: #666; margin-right: 3px; }
+
+/* ---- Revision history (same as FermTrend) ---- */
+
+.rev-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rev-empty {
+  color: #666;
+  font-style: italic;
+  font-size: 13px;
+}
+.rev-entry {
+  background: #0f0f0f;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.rev-entry:first-child {
+  border-color: #3a2810;
+}
+.rev-entry-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.rev-version {
+  color: #ffa500;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+}
+.rev-date {
+  color: #888;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.rev-latest-tag {
+  margin-left: auto;
+  background: #3a2810;
+  color: #ffd18a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.rev-notes {
+  margin: 0;
+  padding-left: 20px;
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.rev-notes li { margin-bottom: 3px; }
+.rev-notes li:last-child { margin-bottom: 0; }
+
+/* ---- Assumptions block (About tab / sidebar equivalent) ---- */
+
+.assumption-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.assumption-list li { margin-bottom: 4px; }

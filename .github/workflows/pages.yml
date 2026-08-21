@@ -1,0 +1,52 @@
+name: Deploy to GitHub Pages
+
+# Publishes the WaterBrain static site to GitHub Pages on every push
+# to main.  The site is pure static HTML/CSS/JS -- no build step, no
+# npm install required, no external services (no CORS proxy needed).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble site
+        # Copy only the files the browser actually needs into a clean
+        # staging dir.  Excludes local dev tooling and repo docs.
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp style.css _site/
+          cp app.js _site/
+          cp brewmath.js _site/
+          cp profiles.js _site/
+          cp changelog.json _site/
+          cp LICENSE _site/
+          cp README.md _site/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
