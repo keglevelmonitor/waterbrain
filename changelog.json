@@ -1,15 +1,22 @@
 {
-    "current":  "0.3.2",
+    "current":  "0.3.3",
     "entries":  [
+                    {
+                        "version":  "0.3.3",
+                        "date":  "2026-08-21",
+                        "notes":  [
+                                      "add agent handoff docs under .cursor"
+                                  ]
+                    },
                     {
                         "version":  "0.3.2",
                         "date":  "2026-08-21",
                         "notes":  [
-                                      "Mash pH model now BF-calibrated for both light AND lime-heavy recipes. v0.3.1 matched BF for an Amber Balanced (0.71 g lime) case within 0.05 mL, but a Brown Malty case (same grain bill + 1.11 g lime) drifted to 4.07 mL vs BF's 3.10 mL because our model was double-counting: it computed acid to overcome an assumed salt-induced pH drop AND stoichiometric acid to neutralize the added slaked lime, while BF's mash pH estimator treats mash pH \u2248 grain-bill DI pH regardless of Ca/Mg and lime additions. The Amber case matched by coincidence -- the two errors happened to cancel at that lime dose.",
-                                      "SALT_PH_DROP_PER_MEQ_CA / _MG zeroed out (were 0.040 / 0.025). Chemistry-wise this is a simplification; empirically it matches how BF's estimator behaves. Palmer / Bru\u2019n Water models predict noticeably more acidification for hard water (Ca > 150 ppm) -- if you need that behavior, raise the constants in brewmath.js.",
-                                      "LIME_EFFECTIVENESS_FACTOR added and set to 0. Lime is still added to the salt bill to hit the Ca target, but no extra acid is dosed to neutralize its alkalinity in the mash. Matches BF's observed behavior (BF returns the same estimated mash pH for the same recipe with different lime amounts).",
-                                      "pH diagnostic strip simplified from 3 cells to 2: Est. Mash pH -> Target. The middle 'With Salts' cell was redundant now that salt drop is zero. The Est. Mash pH value now also folds in acidulated malt's pH contribution -- so an acid-malt-heavy bill correctly shows a low pre-lactic estimate.",
-                                      "Same reference case as v0.3.1 (7 lb MO @ 2.5 + 2 lb Vienna @ 3.8 + 6 oz Roasted Barley @ 600 + 4 oz C75, 8 gal): Amber Balanced -> 3.13 mL, Brown Malty -> 3.13 mL. Both hit BF's 3.10 mL number within 0.03 mL, regardless of how much lime the salt-addition step ends up recommending.",
+                                      "Mash pH model now BF-calibrated for both light AND lime-heavy recipes. v0.3.1 matched BF for an Amber Balanced (0.71 g lime) case within 0.05 mL, but a Brown Malty case (same grain bill + 1.11 g lime) drifted to 4.07 mL vs BF\u0027s 3.10 mL because our model was double-counting: it computed acid to overcome an assumed salt-induced pH drop AND stoichiometric acid to neutralize the added slaked lime, while BF\u0027s mash pH estimator treats mash pH ≈ grain-bill DI pH regardless of Ca/Mg and lime additions. The Amber case matched by coincidence -- the two errors happened to cancel at that lime dose.",
+                                      "SALT_PH_DROP_PER_MEQ_CA / _MG zeroed out (were 0.040 / 0.025). Chemistry-wise this is a simplification; empirically it matches how BF\u0027s estimator behaves. Palmer / Bru’n Water models predict noticeably more acidification for hard water (Ca \u003e 150 ppm) -- if you need that behavior, raise the constants in brewmath.js.",
+                                      "LIME_EFFECTIVENESS_FACTOR added and set to 0. Lime is still added to the salt bill to hit the Ca target, but no extra acid is dosed to neutralize its alkalinity in the mash. Matches BF\u0027s observed behavior (BF returns the same estimated mash pH for the same recipe with different lime amounts).",
+                                      "pH diagnostic strip simplified from 3 cells to 2: Est. Mash pH -\u003e Target. The middle \u0027With Salts\u0027 cell was redundant now that salt drop is zero. The Est. Mash pH value now also folds in acidulated malt\u0027s pH contribution -- so an acid-malt-heavy bill correctly shows a low pre-lactic estimate.",
+                                      "Same reference case as v0.3.1 (7 lb MO @ 2.5 + 2 lb Vienna @ 3.8 + 6 oz Roasted Barley @ 600 + 4 oz C75, 8 gal): Amber Balanced -\u003e 3.13 mL, Brown Malty -\u003e 3.13 mL. Both hit BF\u0027s 3.10 mL number within 0.03 mL, regardless of how much lime the salt-addition step ends up recommending.",
                                       "No schema change; v3 saved inputs stay valid."
                                   ]
                     },
@@ -17,12 +24,12 @@
                         "version":  "0.3.1",
                         "date":  "2026-08-21",
                         "notes":  [
-                                      "Mash pH model re-calibrated against a Brewer's Friend reference recipe (7 lb Maris Otter @ 2.5 L + 2 lb Vienna @ 3.8 L + 6 oz Roasted Barley @ 600 L + 4 oz C75, 8 gal Amber Balanced -> BF requires 3.1 mL of 88% lactic for target pH 5.40). Previous v0.3.0 model was over-dosing by ~40% for mid-color bills; new model lands within 0.05 mL of BF for this reference and reproduces sensible doses across a pilsner SMASH, a brown ale, and a stout.",
-                                      "Base malt DI mash pH curve steepened: 5.75 - 0.006*L -> 5.77 - 0.025*L. Old formula barely moved as Lovibond rose (5.75 for pilsner, 5.72 for Munich 10 L). New formula drops properly with color, matching Kai Troester's per-malt data (5.75 pilsner, 5.71 MO, 5.68 Vienna, 5.52 Munich).",
-                                      "Crystal / Caramel DI mash pH anchor lowered: 5.60 -> 5.45 at zero Lovibond, so C20 -> 5.33, C40 -> 5.21, C80 -> 4.97, C120 -> 4.73. Matches Troester within ~0.03 across the typical range.",
-                                      "Roasted / Dark DI mash pH anchor lowered: 4.85 -> 4.75, slope tripled: 4.75 - 0.0004*L. Chocolate malt (350 L) now anchors at 4.61 instead of 4.75, matching Troester's measurements.",
-                                      "Buffer capacities re-anchored to Troester's central estimates: base malt 40 -> 35 mEq/kg/pH, roasted 45 -> 55. Crystal unchanged at 40.",
-                                      "Salt pH-drop coefficients raised toward Palmer's Water 2013 figures: Ca 0.028 -> 0.040 pH per mEq/L, Mg 0.020 -> 0.025. Together with the buffer change this makes the acid dose ~25-30% lower for typical Amber-profile mashes.",
+                                      "Mash pH model re-calibrated against a Brewer\u0027s Friend reference recipe (7 lb Maris Otter @ 2.5 L + 2 lb Vienna @ 3.8 L + 6 oz Roasted Barley @ 600 L + 4 oz C75, 8 gal Amber Balanced -\u003e BF requires 3.1 mL of 88% lactic for target pH 5.40). Previous v0.3.0 model was over-dosing by ~40% for mid-color bills; new model lands within 0.05 mL of BF for this reference and reproduces sensible doses across a pilsner SMASH, a brown ale, and a stout.",
+                                      "Base malt DI mash pH curve steepened: 5.75 - 0.006*L -\u003e 5.77 - 0.025*L. Old formula barely moved as Lovibond rose (5.75 for pilsner, 5.72 for Munich 10 L). New formula drops properly with color, matching Kai Troester\u0027s per-malt data (5.75 pilsner, 5.71 MO, 5.68 Vienna, 5.52 Munich).",
+                                      "Crystal / Caramel DI mash pH anchor lowered: 5.60 -\u003e 5.45 at zero Lovibond, so C20 -\u003e 5.33, C40 -\u003e 5.21, C80 -\u003e 4.97, C120 -\u003e 4.73. Matches Troester within ~0.03 across the typical range.",
+                                      "Roasted / Dark DI mash pH anchor lowered: 4.85 -\u003e 4.75, slope tripled: 4.75 - 0.0004*L. Chocolate malt (350 L) now anchors at 4.61 instead of 4.75, matching Troester\u0027s measurements.",
+                                      "Buffer capacities re-anchored to Troester\u0027s central estimates: base malt 40 -\u003e 35 mEq/kg/pH, roasted 45 -\u003e 55. Crystal unchanged at 40.",
+                                      "Salt pH-drop coefficients raised toward Palmer\u0027s Water 2013 figures: Ca 0.028 -\u003e 0.040 pH per mEq/L, Mg 0.020 -\u003e 0.025. Together with the buffer change this makes the acid dose ~25-30% lower for typical Amber-profile mashes.",
                                       "No UI or schema changes; v3 saved inputs stay valid. Existing recipes in localStorage will recompute with the new numbers on the next Calculate Salt Additions click."
                                   ]
                     },
@@ -30,25 +37,25 @@
                         "version":  "0.3.0",
                         "date":  "2026-08-21",
                         "notes":  [
-                                      "Grain bill is now a Brewer's Friend-style table -- one row per grain, each with its own weight, unit (lb/oz in US mode, kg/g in Metric), malt category, and Lovibond color. Add-Grain button below the table; per-row delete button. First row can't be deleted (calculator always needs at least one grain).",
-                                      "Four malt categories: Base Malt, Crystal / Caramel, Roasted / Dark, Acidulated Malt. Mash pH model uses per-grain Lovibond color instead of the v0.2.0 category averages: Base DI pH = 5.75 - 0.006*L, Crystal = 5.60 - 0.006*L, Roasted = 4.85 - 0.0003*L (curves fitted to Kai Troester's per-malt measurements).",
+                                      "Grain bill is now a Brewer\u0027s Friend-style table -- one row per grain, each with its own weight, unit (lb/oz in US mode, kg/g in Metric), malt category, and Lovibond color. Add-Grain button below the table; per-row delete button. First row can\u0027t be deleted (calculator always needs at least one grain).",
+                                      "Four malt categories: Base Malt, Crystal / Caramel, Roasted / Dark, Acidulated Malt. Mash pH model uses per-grain Lovibond color instead of the v0.2.0 category averages: Base DI pH = 5.75 - 0.006*L, Crystal = 5.60 - 0.006*L, Roasted = 4.85 - 0.0003*L (curves fitted to Kai Troester\u0027s per-malt measurements).",
                                       "Acidulated Malt is a first-class citizen: enter the % lactic acid content in the Color column (typical: 3.0) and the model computes the mEq of acid the malt supplies and subtracts it from the required lactic-acid dose. Adding acidulated malt correctly reduces the mL of 88% lactic reported.",
-                                      "US <-> Metric toggle converts grain weights losslessly. 9 lb Pale becomes 4.082 kg Pale, not a fresh 4.0 kg default -- your recipe survives the flip.",
-                                      "Category switch is smart: if the color still matches the previous category's default, switching category snaps the color to the new default (Base 2.0 L -> Crystal 40 L). Custom colors are preserved.",
-                                      "Persistence schema bumped v2 -> v3. Previously-saved inputs are ignored (defaults populate instead of crashing)."
+                                      "US \u003c-\u003e Metric toggle converts grain weights losslessly. 9 lb Pale becomes 4.082 kg Pale, not a fresh 4.0 kg default -- your recipe survives the flip.",
+                                      "Category switch is smart: if the color still matches the previous category\u0027s default, switching category snaps the color to the new default (Base 2.0 L -\u003e Crystal 40 L). Custom colors are preserved.",
+                                      "Persistence schema bumped v2 -\u003e v3. Previously-saved inputs are ignored (defaults populate instead of crashing)."
                                   ]
                     },
                     {
                         "version":  "0.2.0",
                         "date":  "2026-08-21",
                         "notes":  [
-                                      "Mash pH / lactic acid overhaul. Previous versions inherited a linear color-to-pH proxy (5.70 - 0.018 * SRM) from the original Streamlit app, which over-corrects for anything past ~SRM 12 and clipped the lactic-acid dose to zero for medium-to-dark beers -- the exact bug that made a Brown Ale come out at 0 mL lactic when Brewer's Friend prescribes ~3.1 mL for the same beer.",
+                                      "Mash pH / lactic acid overhaul. Previous versions inherited a linear color-to-pH proxy (5.70 - 0.018 * SRM) from the original Streamlit app, which over-corrects for anything past ~SRM 12 and clipped the lactic-acid dose to zero for medium-to-dark beers -- the exact bug that made a Brown Ale come out at 0 mL lactic when Brewer\u0027s Friend prescribes ~3.1 mL for the same beer.",
                                       "CALCULATOR: Grain Weight input replaced by a three-way grain-bill breakdown (Base Malt / Crystal or Caramel / Roasted or Dark), with a live-updating total. Water calculations still use the sum -- chemistry calculations use the split.",
                                       "CALCULATOR: dropped the Beer SRM input; it was only used as a color proxy for the mash pH estimate, which is now driven directly by the grain bill.",
-                                      "Salt Additions card now shows a diagnostic strip: DI Mash pH (from grain bill) -> Post-Salts pH (after Ca / Mg drop) -> Target pH. The Target cell also breaks out where the lactic acid dose went (pH drop vs slaked-lime neutralization).",
-                                      "New pH model based on Kai Troester's mash pH research: each grain category anchors at a typical DI mash pH (base 5.72, crystal 5.50, roasted 4.75) and buffers acid at a typical mEq-per-kg-per-pH rate. Salt-drop coefficients tightened from 0.04/0.03 (Ca/Mg) to Palmer's 0.028/0.020 literature values. Acid dose computed via buffer-capacity in mEq, converted to mL of 88% lactic (11.82 mEq/mL from density 1.21 g/mL and MW 90.08).",
-                                      "Same limitations as any category-averaged model: without per-malt Lovibond data the answer is an approximation. Compare with Brewer's Friend / Bru'n Water before betting a brew day on the numbers.",
-                                      "Persistence schema bumped from v1 -> v2. Previously-saved inputs are ignored (defaults populate instead of crashing)."
+                                      "Salt Additions card now shows a diagnostic strip: DI Mash pH (from grain bill) -\u003e Post-Salts pH (after Ca / Mg drop) -\u003e Target pH. The Target cell also breaks out where the lactic acid dose went (pH drop vs slaked-lime neutralization).",
+                                      "New pH model based on Kai Troester\u0027s mash pH research: each grain category anchors at a typical DI mash pH (base 5.72, crystal 5.50, roasted 4.75) and buffers acid at a typical mEq-per-kg-per-pH rate. Salt-drop coefficients tightened from 0.04/0.03 (Ca/Mg) to Palmer\u0027s 0.028/0.020 literature values. Acid dose computed via buffer-capacity in mEq, converted to mL of 88% lactic (11.82 mEq/mL from density 1.21 g/mL and MW 90.08).",
+                                      "Same limitations as any category-averaged model: without per-malt Lovibond data the answer is an approximation. Compare with Brewer\u0027s Friend / Bru\u0027n Water before betting a brew day on the numbers.",
+                                      "Persistence schema bumped from v1 -\u003e v2. Previously-saved inputs are ignored (defaults populate instead of crashing)."
                                   ]
                     },
                     {
@@ -61,7 +68,7 @@
                                       "All 26 built-in style-targeted water profiles carried over from the original app.",
                                       "US Standard / Metric unit toggle in the header; inputs, defaults, and unit labels swap live.",
                                       "PROFILES tab is a browse-and-load surface: click a profile to load its ions into the CALCULATOR tab.",
-                                      "Inputs auto-persist to localStorage so a refresh doesn't wipe a brew-day sheet.",
+                                      "Inputs auto-persist to localStorage so a refresh doesn\u0027t wipe a brew-day sheet.",
                                       "Dark theme with amber accents; same visual language as FermTrend and the FermVault Brain dashboard."
                                   ]
                     }
