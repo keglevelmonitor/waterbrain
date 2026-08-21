@@ -6,7 +6,7 @@ into its own in-chat todo list. When work completes, mark items done
 here (and add follow-ups) so the next agent has ground truth.
 
 Last updated: 2026-08-21 (v0.3.2 shipped: BF-calibrated mash pH,
-handoff docs written)
+handoff docs written; hco3-support scoped but deferred)
 
 ---
 
@@ -23,6 +23,85 @@ future sessions.
 ---
 
 ## Nice-to-haves (in rough priority order)
+
+### hco3-support — Add Bicarbonate (HCO3) as a first-class ion
+
+**Status:** scoped 2026-08-21, deferred. Do the whole thing or none
+of it. Half-adding it (input field with no math change) is worse
+than not adding it.
+
+**Why it matters:**
+
+1. **Non-RO source water.** The moment a brewer uses tap or well
+   water, HCO3 alkalinity is the single biggest driver of mash-pH
+   resistance. Without it, our mash-pH estimate for a 150 ppm HCO3
+   tap water would be ~0.3-0.5 pH high, and our lactic-acid
+   recommendation would be 2-4x too low. This is the primary
+   motivator.
+2. **Baking soda / chalk additions.** Some brewers add NaHCO3 or
+   CaCO3 to *raise* mash pH for very dark grists. WaterBrain has
+   no way to do this today. Adding HCO3 to the palette naturally
+   comes with adding one or both of those salts.
+3. **Historic style-water fidelity.** Dublin, Burton, Dortmund,
+   Munich (Boiled), and Vienna (Boiled) profiles in `profiles.js`
+   are already misleading without HCO3. Real Dublin water is
+   defined by ~200-330 ppm HCO3; the "(Boiled)" qualifier on
+   Munich / Vienna is meaningless without an alkalinity number
+   for boiling to reduce.
+4. **Residual Alkalinity (RA) diagnostic.** Kolbach's
+   `RA = alkalinity - (Ca/1.4 + Mg/1.7)` is the best water-to-
+   beer-color match number and is surfaced by BF, Bru'n Water,
+   and EZ Water. We can't compute it without alkalinity.
+
+**Why it's a Real Feature (not a one-hour add):**
+
+Scope, all-in:
+
+1. **`profiles.js`** — add `hco3` field to all 26 built-in
+   profiles with realistic historic values (Dublin ~280, Burton
+   ~200, Dortmund ~180, raw Munich ~180, Munich (Boiled) ~40,
+   raw Vienna ~120, Vienna (Boiled) ~30, Pilsen ~15, most
+   generic style profiles ~50-100).
+2. **`index.html` + `app.js`** — add a "Source Water" ion panel
+   (Ca / Mg / Na / SO4 / Cl / HCO3, all starting at 0 for RO
+   brewers). Add HCO3 to the target profile summary line, on the
+   far right next to Cl.
+3. **`brewmath.js`** — waterfall math changes from "compute salt
+   to hit target from zero" to "compute salt to hit
+   `target - source`" for each ion. Mechanical but everywhere.
+   Bump `LS_INPUTS` to `.v4`.
+4. **`brewmath.js`** — mash-pH model gets a real alkalinity term:
+   `est_mash_pH += (source_HCO3_alkalinity_mEq / buffer)`.
+   Requires another BF calibration pass, because BF *does*
+   factor in source alkalinity for non-RO recipes.
+5. **`brewmath.js`** — add baking soda (`NaHCO3`) to the salt
+   palette. Probably skip chalk (`CaCO3`) — notoriously
+   undissolvable and most brewers don't use it. Baking soda
+   raises `est_mash_pH` per gram and contributes Na + HCO3.
+6. **RA diagnostic** — add a Residual Alkalinity readout
+   somewhere (SETTINGS, or under the salt additions card, or
+   in the pH diagnostic strip).
+7. **Docs** — update `context-primer.md` "Mash pH model" section
+   with alkalinity term; refresh regression recipes to cover a
+   tap-water case; update README.
+
+**Rough size estimate:** about the same as v0.3.0 + v0.3.2
+combined. Ship as `v0.4.0` (minor bump — new user-facing feature).
+
+**Trigger to actually build it:** any of
+
+- Cole wants to brew with tap water instead of RO.
+- Cole wants baking soda for a dark beer that mashes below 5.2.
+- A user requests it.
+
+Until then it's a defensible design choice to stay RO-only. Adding
+this speculatively adds UI clutter for the majority of users who
+brew with RO.
+
+**Before starting:** check `streamlit-legacy` branch's
+`target_water_profiles.json` — if it already had HCO3 as a target
+field, use those values as the starting point for the JS profiles
+instead of re-deriving from historical references.
 
 ### calibration-breadth — Verify BF match across a broader recipe range
 
