@@ -26,9 +26,11 @@ future sessions.
 
 ### hco3-support — Add Bicarbonate (HCO3) as a first-class ion
 
-**Status:** scoped 2026-08-21, deferred. Do the whole thing or none
-of it. Half-adding it (input field with no math change) is worse
-than not adding it.
+**Status:** scoped 2026-08-21, deferred. Cole brews with RO water
+only and the app is single-user, so staying RO-only is the active
+decision — not just a default. Do NOT build this speculatively.
+Do the whole thing or none of it (half-adding it with an input
+field but no math change is worse than not adding it).
 
 **Why it matters:**
 
