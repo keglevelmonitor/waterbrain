@@ -5,8 +5,8 @@ The agent should read this at the start of every new chat and mirror it
 into its own in-chat todo list. When work completes, mark items done
 here (and add follow-ups) so the next agent has ground truth.
 
-Last updated: 2026-08-21 (v0.3.2 shipped: BF-calibrated mash pH,
-handoff docs written; hco3-support scoped but deferred)
+Last updated: 2026-08-22 (bf-recipe-import scoped and deferred;
+hco3-support scoped and deferred; v0.3.3 is current live release)
 
 ---
 
@@ -23,6 +23,180 @@ future sessions.
 ---
 
 ## Nice-to-haves (in rough priority order)
+
+### bf-recipe-import — Import grain bill from Brewer's Friend
+
+**Status:** scoped 2026-08-22, deferred. Cole wants this eventually
+but is waiting for a "reasonable time" to build. All infrastructure
+exists, feasibility is high, technical risk is low. Deferred purely
+on effort-vs-need timing.
+
+**Why it matters:**
+
+Cole already builds recipes in Brewer's Friend. Typing the same
+grain bill into WaterBrain to compute salts / lactic acid is
+duplicate work and a source of transcription errors. An import
+button removes that friction entirely and makes WaterBrain the
+natural companion to a BF-based recipe workflow.
+
+**Feasibility: HIGH — all infrastructure already exists.**
+
+Green lights:
+
+1. **BF endpoint is documented and clean.** See
+   <https://docs.brewersfriend.com/api/recipes.md>. Endpoints:
+   - `GET /v1/recipes` — list, params: `limit` (default 20, max 100),
+     `offset`, `sort=updated_at:-1`, `keyword`, date filters. Add
+     `ingredients=true` to include grains (max limit drops to 20).
+   - `GET /v1/recipes/:id` — single recipe, includes ingredients by
+     default. Can also return BeerXML.
+   - Auth: `X-API-Key` header — identical to `/brewsessions`.
+2. **FermTrend's Cloudflare Worker is a generic BF passthrough** —
+   NOT `/brewsessions`-specific. See `FermTrend/worker/index.js`. It
+   forwards any BF path with `X-API-Key` header and adds CORS.
+   WaterBrain can piggyback with zero new infra:
+   - Same production origin allowlist (`keglevelmonitor.github.io`
+     covers both apps).
+   - Local dev origin `localhost:3007` also already covered.
+   - Free-tier budget (100k req/day) is orders of magnitude more
+     than we need.
+3. **`FermTrend/bf-client.js` is ~95% reusable.** Auth, HTTP wrapper,
+   timeout/abort, error mapping (401 / 403 / 429). Copy the file,
+   swap the LS key to `waterbrain.bf_api_key`, add `listRecipes`
+   and `getRecipe` functions, done.
+4. **Recipe payload confirms the ion fields exist.** From the docs
+   sample: `ca2`, `mg2`, `so4`, `na`, `cl`, `hco3`, `ph`,
+   `waterprofile`, `waterprofile_custom`, `water_profile_id`. So
+   an optional "also load water profile" checkbox is a natural
+   later extension.
+
+Yellow lights (things to verify with a live probe before coding):
+
+1. **Exact fermentable JSON schema.** The docs sample truncates the
+   ingredients array. BeerXML has `NAME`, `AMOUNT` (kg), `TYPE`,
+   `COLOR` (Lovibond), but BF's JSON field names need one live
+   fetch with the user's API key to confirm.
+2. **Amount units.** May be in the recipe's `displayunits` (lb/kg)
+   or always in kg per BeerXML convention. Trivial once probed.
+3. **Non-grain fermentables.** Recipes commonly include table sugar,
+   DME, rice hulls. Filter to `type: Grain` for the mash-pH calc;
+   list ignored items in the import summary so nothing silently
+   disappears.
+4. **Grain-category classification.** BF stores `TYPE: Grain | Sugar
+   | Extract | Adjunct | ...` but NOT our
+   `base | crystal | roasted | acidulated` buckets. Heuristic:
+   - **Name-based first:** "pilsner" / "pale" / "vienna" / "munich"
+     / "maris otter" → base; "crystal" / "caramel" → crystal;
+     "chocolate" / "black" / "roast" / "carafa" → roasted;
+     "acidulated" / "sauer" → acidulated.
+   - **Color-based fallback:** L < 10 → base; 10-100 → crystal;
+     > 100 → roasted.
+   - **Show classification in the UI** so the user can override
+     before we run the acid math. This is important — a
+     mis-classified crystal-as-base could throw acid dose off by
+     a mL or more.
+
+**Recommended MVP scope (v0.4.0):**
+
+*In:*
+
+1. API-key field in SETTINGS, stored in `localStorage` as
+   `waterbrain.bf_api_key`. Test button that calls
+   `GET /v1/recipes?limit=1` and reports "OK — N recipes found."
+   Link to <https://www.brewersfriend.com/homebrew/integrations> for
+   users who don't know where to get their key.
+2. "Import from Brewer's Friend" button on CALCULATOR tab.
+3. Recipe picker modal: 20 most-recent recipes, sorted
+   `updated_at:-1`. Show title, style, updated date, OG.
+4. Click a recipe → fetch full details → classify grains →
+   populate the grain bill (with a "replace existing bill?" confirm
+   if current bill is non-empty).
+5. Inline "we classified X as `crystal` — click to change" badges
+   on each imported row so the user can fix mis-guesses before the
+   math runs. Ignored non-grain fermentables listed below the table
+   in a "skipped:" line.
+6. User-triggered fetch only; no auto-refresh, no polling.
+
+*Out of MVP (deferred to v0.5+):*
+
+- Auto-import water profile ions (mixes concerns — Cole may want
+  RO regardless of what the recipe stored). Add as a checkbox
+  later. Would also need `hco3-support` shipped first to be
+  fully honest.
+- Auto-fill brew volume / mash thickness. BF's `batchsize`,
+  `boilsize`, `boiltime`, `mash_thickness`, `efficiency` map to
+  our `targetVol`, `boiloffRate`, `boilTime`, `thickness`, `absRate`
+  but it's bridgeable-not-trivial and easy to get subtly wrong.
+  Safer to leave brew-day water numbers as manual entry.
+- Recipe search / keyword filter. Nice with 500+ recipes; skip for
+  MVP.
+- Recipe caching / offline mode. Not needed at 20-recipes-per-page.
+- HCO3 handling — still deferred per `hco3-support` above.
+- Two-way sync (push modified bill back to BF). BF's REST API is
+  read-only anyway.
+
+**Two design questions to answer at build time:**
+
+1. **Piggyback on FermTrend's Worker or deploy a separate one?**
+   - *Piggyback (RECOMMENDED):* zero new infra, single origin
+     allowlist to maintain. Downside: if FermTrend's Worker is torn
+     down someday, WaterBrain breaks too.
+   - *Separate:* clean separation, but two Workers to maintain.
+     Cost is zero either way (free tier).
+   - **Recommendation:** piggyback. Both apps ship from the same
+     org, they'll live and die together.
+2. **One-shot import or "linked" recipe?**
+   - *One-shot (RECOMMENDED):* import populates the bill; user
+     edits locally. WaterBrain stays stateless w.r.t. BF. Simpler
+     UI, no "recipe changed on BF, resync?" edge cases.
+   - *Linked:* remember which recipe was loaded, offer a re-sync
+     button. More power, more edge cases.
+   - **Recommendation:** one-shot for MVP. Add re-sync later if it
+     turns out to be a real pain point.
+
+**Estimated effort:**
+
+- Copy + adapt `bf-client.js` from FermTrend: ~50 lines glue for
+  `listRecipes` + `getRecipe`.
+- Category classifier heuristic (name + color) in a new
+  `bf-import.js`: ~80 lines.
+- SETTINGS API-key field + test button: ~30 lines HTML/CSS +
+  ~20 lines JS.
+- CALCULATOR import button + picker modal: ~150 lines HTML/CSS +
+  ~100 lines JS.
+- Docs (`context-primer.md` needs a new "Brewer's Friend import"
+  section covering Worker piggyback, classifier heuristic,
+  fermentable schema notes, and regression testing): ~60 lines.
+- Regression testing: fetch one of Cole's real recipes, verify
+  classification, run through the calculator, compare against BF's
+  own water calc for that recipe.
+
+**Rough total: 1 focused session for MVP, 2 sessions for polish.**
+Ship as v0.4.0 (minor bump — new user-facing feature).
+
+**Do this before coding starts:**
+
+1. **Live probe.** Ask Cole for his BF API key, fetch one of his
+   real recipes, dump the JSON. Confirm:
+   - Fermentable field names (probably `name`, `amount`, `type`,
+     `color`, but verify).
+   - Amount unit (lb/kg per `displayunits`, or always kg per BeerXML).
+   - How non-grain fermentables are marked.
+2. **Confirm Worker allowlist covers WaterBrain's Pages origin.**
+   FermTrend's `worker/index.js` currently allows
+   `keglevelmonitor.github.io`. WaterBrain is served from
+   `keglevelmonitor.github.io/waterbrain/` — same origin. Should
+   Just Work but verify with a browser fetch in DevTools before
+   committing.
+3. **Consider bumping FermTrend's Worker `User-Agent` string.** It
+   currently identifies as `FermTrend/1.0`. Once WaterBrain shares
+   it, either rename to `keglevelmonitor-proxy/1.0` or leave as
+   FermTrend (BF doesn't care, this is just tidiness).
+
+**Trigger to build:** whenever Cole decides the friction of typing
+grain bills into WaterBrain is worth an afternoon of dev time. Not
+urgent — current manual entry works fine, and the app has been
+BF-calibrated so the numbers already agree with BF anyway.
 
 ### hco3-support — Add Bicarbonate (HCO3) as a first-class ion
 
