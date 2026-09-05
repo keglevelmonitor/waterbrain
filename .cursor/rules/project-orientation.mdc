@@ -33,7 +33,7 @@ work. Skip this and you will re-litigate decisions already made.
   — the ORIGINAL Streamlit-based WaterBrain, preserved for
   provenance. Do not build off it; the pure-JS rewrite in `main` is
   the ground truth for behavior. When math differs, this repo wins.
-- **`../FermVaultPico/`** — Cole's Raspberry Pi Pico W fermentation
+- **`../FermentationVaultPico/`** — Cole's Raspberry Pi Pico W fermentation
   controller. Unrelated to WaterBrain's math, but shares the same
   visual language / dark-theme-with-amber-accent aesthetic. Follow
   the same UX conventions if you touch styling.

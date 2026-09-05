@@ -30,7 +30,7 @@ will save the user (Cole) from having to re-explain them.
 - **User environment:** Windows / PowerShell. All shell examples in
   docs and scripts must be PowerShell-compatible. `.ps1` scripts
   must be ASCII-only (no smart quotes, no em-dashes) — that's a
-  repo-wide rule inherited from the FermVaultPico project.
+  repo-wide rule inherited from the FermentationVaultPico project.
 
 ## Deploy / ship workflow
 
@@ -379,9 +379,9 @@ import('./brewmath.js').then(m => {
 - **Pages first-deploy 404:** see "First-time deploy gotcha" above.
   If a fresh clone deploys 404, the fix is enabling Pages source =
   GitHub Actions on the repo, not a code change.
-- **`.mpy` shadow trap is a FermVaultPico thing, not a WaterBrain
+- **`.mpy` shadow trap is a FermentationVaultPico thing, not a WaterBrain
   thing** — WaterBrain has no compiled bytecode, ships plain JS.
-  Ignore any advice from FermVaultPico's primer about `.py` vs
+  Ignore any advice from FermentationVaultPico's primer about `.py` vs
   `.mpy`.
 
 ## Update discipline
